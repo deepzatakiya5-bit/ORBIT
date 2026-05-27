@@ -22,6 +22,11 @@ func NewServer(db *pgxpool.Pool, h *handler.Handler) *Server {
 func (s *Server) Routes() http.Handler {
 	r := chi.NewRouter()
 
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/ui/", http.StatusFound)
+	})
+	r.Handle("/ui/*", http.StripPrefix("/ui", webHandler()))
+
 	r.Get("/health", s.health)
 	r.Get("/ready", s.ready)
 
