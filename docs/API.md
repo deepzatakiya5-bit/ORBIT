@@ -2,6 +2,8 @@
 
 Base URL (local): `http://localhost:8080`
 
+**Dev UI:** open [http://localhost:8080/ui/](http://localhost:8080/ui/) in your browser to test the full flow without curl.
+
 All JSON endpoints use:
 
 ```
