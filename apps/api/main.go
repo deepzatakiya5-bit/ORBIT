@@ -7,8 +7,11 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
+	"orbit/apps/api/handler"
 	"orbit/pkg/config"
 	"orbit/pkg/db"
+	"orbit/pkg/llm"
+	"orbit/pkg/store"
 )
 
 func main() {
@@ -29,7 +32,18 @@ func main() {
 	}
 	defer pool.Close()
 
-	srv := NewServer(pool)
+	var provider llm.Provider
+	if cfg.OpenAIAPIKey != "" {
+		provider = llm.NewOpenAI(cfg.OpenAIAPIKey, cfg.OpenAIModel)
+		log.Printf("LLM: OpenAI (%s)", cfg.OpenAIModel)
+	} else {
+		provider = llm.NewStub()
+		log.Print("LLM: stub mode (set OPENAI_API_KEY for real replies)")
+	}
+
+	st := store.New(pool)
+	h := handler.New(st, provider)
+	srv := NewServer(pool, h)
 	addr := fmt.Sprintf(":%s", cfg.Port)
 
 	log.Printf("ORBIT API listening on %s", addr)

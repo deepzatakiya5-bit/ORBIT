@@ -6,8 +6,10 @@ import (
 )
 
 type Config struct {
-	Port        string
-	DatabaseURL string
+	Port          string
+	DatabaseURL   string
+	OpenAIAPIKey  string
+	OpenAIModel   string
 }
 
 func Load() (Config, error) {
@@ -21,8 +23,15 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")
 	}
 
+	model := os.Getenv("OPENAI_MODEL")
+	if model == "" {
+		model = "gpt-4o-mini"
+	}
+
 	return Config{
-		Port:        port,
-		DatabaseURL: dbURL,
+		Port:         port,
+		DatabaseURL:  dbURL,
+		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
+		OpenAIModel:  model,
 	}, nil
 }

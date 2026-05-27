@@ -6,14 +6,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"orbit/apps/api/handler"
 )
 
 type Server struct {
-	db *pgxpool.Pool
+	db      *pgxpool.Pool
+	handler *handler.Handler
 }
 
-func NewServer(db *pgxpool.Pool) *Server {
-	return &Server{db: db}
+func NewServer(db *pgxpool.Pool, h *handler.Handler) *Server {
+	return &Server{db: db, handler: h}
 }
 
 func (s *Server) Routes() http.Handler {
@@ -21,6 +24,19 @@ func (s *Server) Routes() http.Handler {
 
 	r.Get("/health", s.health)
 	r.Get("/ready", s.ready)
+
+	r.Route("/v1", func(r chi.Router) {
+		r.Post("/users", s.handler.CreateUser)
+		r.Route("/users/{userID}", func(r chi.Router) {
+			r.Get("/", s.handler.GetUser)
+			r.Put("/onboarding", s.handler.CompleteOnboarding)
+		})
+		r.Post("/conversations", s.handler.CreateConversation)
+		r.Route("/conversations/{conversationID}", func(r chi.Router) {
+			r.Get("/messages", s.handler.ListMessages)
+			r.Post("/messages", s.handler.SendMessage)
+		})
+	})
 
 	return r
 }
@@ -37,7 +53,6 @@ func (s *Server) ready(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ready"})
 }
 
