@@ -6,10 +6,10 @@ import (
 )
 
 type Config struct {
-	Port          string
-	DatabaseURL   string
-	OpenAIAPIKey  string
-	OpenAIModel   string
+	Port         string
+	DatabaseURL  string
+	GeminiAPIKey string
+	GeminiModel  string
 }
 
 func Load() (Config, error) {
@@ -23,15 +23,15 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")
 	}
 
-	model := os.Getenv("OPENAI_MODEL")
+	model := os.Getenv("GEMINI_MODEL")
 	if model == "" {
-		model = "gpt-4o-mini"
+		model = "gemini-2.5-flash"
 	}
 
 	return Config{
 		Port:         port,
 		DatabaseURL:  dbURL,
-		OpenAIAPIKey: os.Getenv("OPENAI_API_KEY"),
-		OpenAIModel:  model,
+		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
+		GeminiModel:  model,
 	}, nil
 }

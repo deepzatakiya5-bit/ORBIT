@@ -33,12 +33,12 @@ func main() {
 	defer pool.Close()
 
 	var provider llm.Provider
-	if cfg.OpenAIAPIKey != "" {
-		provider = llm.NewOpenAI(cfg.OpenAIAPIKey, cfg.OpenAIModel)
-		log.Printf("LLM: OpenAI (%s)", cfg.OpenAIModel)
+	if cfg.GeminiAPIKey != "" {
+		provider = llm.NewGemini(cfg.GeminiAPIKey, cfg.GeminiModel)
+		log.Printf("LLM: Gemini (%s)", cfg.GeminiModel)
 	} else {
 		provider = llm.NewStub()
-		log.Print("LLM: stub mode (set OPENAI_API_KEY for real replies)")
+		log.Print("LLM: stub mode (set GEMINI_API_KEY for real replies)")
 	}
 
 	st := store.New(pool)

@@ -30,7 +30,7 @@ func (s *Stub) Chat(ctx context.Context, messages []Message) (string, error) {
 	if last == "" {
 		last = "..."
 	}
-	return fmt.Sprintf("I'm ORBIT (dev mode — set OPENAI_API_KEY for real replies). You said: %s", last), nil
+	return fmt.Sprintf("I'm ORBIT (dev mode — set GEMINI_API_KEY for real replies). You said: %s", last), nil
 }
 
 func StubGreeting(user models.User) string {

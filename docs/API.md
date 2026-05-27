@@ -537,7 +537,7 @@ curl -s http://localhost:8080/v1/conversations/$CONV_ID/messages
 
 | Environment | Behavior |
 |-------------|----------|
-| `OPENAI_API_KEY` set | Real replies via OpenAI (`OPENAI_MODEL`, default `gpt-4o-mini`) |
-| `OPENAI_API_KEY` unset | Dev stub — echoes input with a placeholder prefix |
+| `GEMINI_API_KEY` set | Real replies via Gemini (`GEMINI_MODEL`, default `gemini-2.5-flash`) |
+| `GEMINI_API_KEY` unset | Dev stub — echoes input with a placeholder prefix |
 
 Profile fields (name, nickname, timezone, communication style, why_here, etc.) are injected into the LLM system prompt for greetings and chat replies.
