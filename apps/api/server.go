@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"orbit/apps/api/handler"
+	"orbit/apps/api/middleware"
 )
 
 type Server struct {
@@ -21,6 +22,7 @@ func NewServer(db *pgxpool.Pool, h *handler.Handler) *Server {
 
 func (s *Server) Routes() http.Handler {
 	r := chi.NewRouter()
+	r.Use(middleware.DevCORS)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/ui/", http.StatusFound)

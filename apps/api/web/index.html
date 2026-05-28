@@ -207,7 +207,7 @@
       <h2>Connection</h2>
       <p class="info">Served from the API — base URL defaults to this host.</p>
       <label>API base URL</label>
-      <input type="url" id="api-base" placeholder="http://localhost:8080" />
+      <input type="url" id="api-base" placeholder="http://localhost:8081" />
       <div class="btn-row">
         <button type="button" class="secondary" id="btn-check">Check health</button>
         <button type="button" id="btn-new-user">Create new user</button>
@@ -485,7 +485,8 @@
       }
     }
 
-    $('api-base').value = window.location.origin;
+    const feDev = window.location.port === '3000';
+    $('api-base').value = feDev ? 'http://localhost:8081' : window.location.origin;
     $('birthdate').value = '1998-05-15';
 
     $('btn-check').onclick = checkHealth;
