@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -33,19 +33,9 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conv, err := h.store.GetConversation(r.Context(), convID)
-	if err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "conversation not found")
-			return
-		}
-		writeError(w, http.StatusInternalServerError, "failed to load conversation")
-		return
-	}
-
-	userID, err := uuid.Parse(conv.UserID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "invalid user id")
+	userID, ok := authUserID(r)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
@@ -78,6 +68,7 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	reply, err := h.llm.Chat(r.Context(), llm.WithSystemForUser(user, llmMessages))
 	if err != nil {
+		fmt.Println("failed to generate reply", err)
 		writeError(w, http.StatusBadGateway, "failed to generate reply")
 		return
 	}

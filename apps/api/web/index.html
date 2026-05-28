@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ORBIT — Dev UI</title>
+  <title>ORBIT</title>
   <style>
     :root {
       --bg: #0b0d12;
@@ -28,215 +28,255 @@
       line-height: 1.5;
     }
     header {
-      padding: 1rem 1.5rem;
+      padding: 0.85rem 1.25rem;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      flex-wrap: wrap;
       background: var(--surface);
     }
-    header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: 0.02em; }
+    header h1 { font-size: 1.15rem; font-weight: 600; }
     header h1 span { color: var(--accent); }
-    .status-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .header-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .pill {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.6rem;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
       border-radius: 999px;
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--muted);
     }
-    .pill.ok { color: var(--success); border-color: #2a5c44; }
-    .pill.bad { color: var(--error); border-color: #5c2a34; }
-    main {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 1.5rem;
-    }
-    .panel {
+    .pill.ok { color: var(--success); }
+    .pill.bad { color: var(--error); }
+    .user-badge { font-size: 0.85rem; color: var(--muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    main { max-width: 480px; margin: 0 auto; padding: 1.25rem; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .hero { text-align: center; margin-bottom: 1.5rem; }
+    .hero h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .hero p { color: var(--muted); font-size: 0.95rem; }
+    .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 1.25rem;
       margin-bottom: 1rem;
     }
-    .panel h2 {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .tab {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
       color: var(--muted);
-      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
     }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
-      margin-bottom: 0.25rem;
-      margin-top: 0.75rem;
+      margin-bottom: 0.3rem;
+      margin-top: 0.85rem;
     }
     label:first-child { margin-top: 0; }
-    input, select, textarea {
+    input, select {
       width: 100%;
-      padding: 0.55rem 0.75rem;
+      padding: 0.65rem 0.8rem;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--text);
       font-size: 0.95rem;
     }
-    textarea { min-height: 80px; resize: vertical; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-    @media (max-width: 520px) { .row { grid-template-columns: 1fr; } }
-    .checks { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    @media (max-width: 420px) { .row { grid-template-columns: 1fr; } }
+    .checks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
     .checks label {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      margin: 0;
-      font-size: 0.85rem;
-      color: var(--text);
-      cursor: pointer;
+      display: flex; align-items: center; gap: 0.3rem;
+      margin: 0; font-size: 0.82rem; color: var(--text); cursor: pointer;
     }
     .checks input { width: auto; }
-    button {
+    button, .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%;
       margin-top: 1rem;
-      padding: 0.6rem 1.2rem;
+      padding: 0.7rem 1rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: var(--accent);
       color: #fff;
       font-weight: 600;
+      font-size: 0.95rem;
       cursor: pointer;
-      font-size: 0.9rem;
     }
-    button:hover { background: var(--accent-dim); }
-    button.secondary {
+    button:hover:not(:disabled) { background: var(--accent-dim); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    button.secondary, .btn.secondary {
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
+      width: auto;
+      margin-top: 0;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.82rem;
     }
-    button.secondary:hover { border-color: var(--accent); }
-    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-    .btn-row button { margin-top: 0; }
-    .hidden { display: none !important; }
-    #chat-panel { display: flex; flex-direction: column; min-height: 420px; }
-  .chat-header {
+    .hint { font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; }
+    .link-btn {
+      background: none; border: none; color: var(--accent);
+      font-size: 0.85rem; cursor: pointer; margin-top: 0.75rem; width: auto; padding: 0;
+    }
+    .link-btn:hover { text-decoration: underline; background: none; }
+    #chat-screen.active {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
+      flex-direction: column;
+      min-height: calc(100vh - 52px);
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0;
     }
+    .chat-top {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      text-align: center;
+    }
+    .chat-top h2 { font-size: 1rem; font-weight: 600; }
     #messages {
       flex: 1;
       overflow-y: auto;
-      max-height: 360px;
+      padding: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      padding: 0.5rem 0;
+      gap: 0.65rem;
+      min-height: 200px;
     }
     .msg {
-      max-width: 85%;
-      padding: 0.65rem 0.9rem;
-      border-radius: 12px;
+      max-width: 88%;
+      padding: 0.65rem 0.85rem;
+      border-radius: 14px;
       font-size: 0.92rem;
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .msg.user {
-      align-self: flex-end;
-      background: var(--user-bubble);
-      border-bottom-right-radius: 4px;
-    }
-    .msg.assistant {
-      align-self: flex-start;
-      background: var(--orbit-bubble);
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 4px;
-    }
-    .msg .role {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 0.25rem;
-    }
-    .chat-input {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-      padding-top: 1rem;
+    .msg.user { align-self: flex-end; background: var(--user-bubble); border-bottom-right-radius: 4px; }
+    .msg.assistant { align-self: flex-start; background: var(--orbit-bubble); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg .who { font-size: 0.65rem; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+    .chat-bottom {
+      padding: 0.75rem 1rem;
       border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; gap: 0.5rem;
     }
-    .chat-input input { flex: 1; margin: 0; }
-    .chat-input button { margin: 0; flex-shrink: 0; }
+    .chat-bottom input { flex: 1; margin: 0; }
+    .chat-bottom button { width: auto; margin: 0; padding: 0.65rem 1.1rem; flex-shrink: 0; }
+    .empty-chat { color: var(--muted); text-align: center; padding: 2rem 1rem; font-size: 0.9rem; }
     #toast {
-      position: fixed;
-      bottom: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 0.75rem 1.25rem;
-      border-radius: 8px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      font-size: 0.9rem;
-      z-index: 100;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-      max-width: 90vw;
+      position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
+      padding: 0.65rem 1rem; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      font-size: 0.88rem; z-index: 200; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s; max-width: 92vw;
     }
     #toast.show { opacity: 1; }
     #toast.error { border-color: var(--error); color: var(--error); }
-    .meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; word-break: break-all; }
-    .info { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem; }
+    #settings-panel {
+      display: none;
+      padding: 0.75rem 1.25rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    #settings-panel.open { display: block; }
+    .login-pane { display: none; }
+    .login-pane.active { display: block; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <header>
-    <h1><span>ORBIT</span> Dev UI</h1>
-    <div class="status-pills">
-      <span class="pill" id="pill-api">API …</span>
-      <span class="pill" id="pill-db">DB …</span>
+    <h1><span>ORBIT</span></h1>
+    <div class="header-right">
+      <span class="pill" id="pill-api">…</span>
+      <span class="pill" id="pill-db">…</span>
+      <span class="user-badge hidden" id="user-badge"></span>
+      <button type="button" class="secondary hidden" id="btn-logout">Log out</button>
+      <button type="button" class="secondary" id="btn-settings" title="Dev settings">⚙</button>
     </div>
   </header>
+  <div id="settings-panel">
+    <label>API URL (dev)</label>
+    <input type="url" id="api-base" placeholder="http://localhost:8081" />
+  </div>
 
-  <main>
-    <section class="panel" id="setup-panel">
-      <h2>Connection</h2>
-      <p class="info">Served from the API — base URL defaults to this host.</p>
-      <label>API base URL</label>
-      <input type="url" id="api-base" placeholder="http://localhost:8081" />
-      <div class="btn-row">
-        <button type="button" class="secondary" id="btn-check">Check health</button>
-        <button type="button" id="btn-new-user">Create new user</button>
+  <!-- AUTH / LOGIN -->
+  <main id="auth-screen" class="screen active">
+    <div class="hero">
+      <h2>Your companion</h2>
+      <p>Sign in or create an account to start talking with ORBIT.</p>
+    </div>
+
+    <div class="card">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-tab="login">Sign in</button>
+        <button type="button" class="tab" data-tab="signup">New here</button>
       </div>
-      <p class="meta" id="user-meta">No user yet</p>
-    </section>
 
-    <section class="panel hidden" id="onboarding-panel">
-      <h2>Onboarding</h2>
-      <p class="info">Complete once per user. Required before chat.</p>
+      <div id="pane-login" class="login-pane active">
+        <label>Device ID</label>
+        <input type="text" id="login-device-id" placeholder="e.g. my-phone-001" autocomplete="username" />
+        <p class="hint">Use the same ID you chose when you first joined.</p>
+
+        <details style="margin-top:0.85rem">
+          <summary class="hint" style="cursor:pointer;list-style:none">Or use email / phone</summary>
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" />
+          <label>Phone</label>
+          <input type="text" id="login-phone" placeholder="+91 98765 43210" />
+        </details>
+
+        <button type="button" id="btn-login">Sign in</button>
+      </div>
+
+      <div id="pane-signup" class="login-pane">
+        <p class="hint">We’ll ask a few questions next, then ORBIT will greet you.</p>
+        <button type="button" id="btn-signup">Create account</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ONBOARDING -->
+  <main id="onboarding-screen" class="screen">
+    <div class="hero">
+      <h2>Tell us about you</h2>
+      <p>Helps ORBIT talk with you in a way that fits.</p>
+    </div>
+    <div class="card">
       <div class="row">
         <div>
           <label>Full name *</label>
-          <input type="text" id="name" placeholder="Deep Zatakiya" />
+          <input type="text" id="name" placeholder="Your name" />
         </div>
         <div>
           <label>Nickname</label>
-          <input type="text" id="nickname" placeholder="Deep" />
+          <input type="text" id="nickname" placeholder="What should ORBIT call you?" />
         </div>
       </div>
       <div class="row">
         <div>
           <label>Gender *</label>
           <select id="gender">
-            <option value="male">male</option>
-            <option value="female">female</option>
-            <option value="non_binary">non_binary</option>
-            <option value="other">other</option>
-            <option value="prefer_not_to_say">prefer_not_to_say</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="non_binary">Non-binary</option>
+            <option value="other">Other</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
           </select>
         </div>
         <div>
@@ -245,120 +285,156 @@
         </div>
       </div>
       <label>Occupation *</label>
-      <input type="text" id="occupation" placeholder="Software Engineer" />
+      <input type="text" id="occupation" placeholder="Student, engineer, …" />
       <div class="row">
         <div>
-          <label>Preferred language *</label>
+          <label>Language *</label>
           <input type="text" id="preferred_language" value="en" />
         </div>
         <div>
           <label>Timezone *</label>
-          <input type="text" id="timezone" value="Asia/Kolkata" placeholder="Asia/Kolkata" />
+          <input type="text" id="timezone" value="Asia/Kolkata" />
         </div>
       </div>
-      <label>Communication style *</label>
+      <label>How should ORBIT talk? *</label>
       <select id="communication_style">
-        <option value="warm_short">warm_short — warm & concise</option>
-        <option value="warm_long">warm_long — warm & detailed</option>
-        <option value="direct_short">direct_short — direct & concise</option>
-        <option value="playful_short">playful_short — playful & concise</option>
+        <option value="warm_short">Warm & concise</option>
+        <option value="warm_long">Warm & detailed</option>
+        <option value="direct_short">Direct & concise</option>
+        <option value="playful_short">Playful & concise</option>
       </select>
-      <label>Why are you here? * (1–5)</label>
-      <div class="checks" id="why-here-checks">
-        <label><input type="checkbox" value="companionship" checked /> companionship</label>
-        <label><input type="checkbox" value="stress_support" /> stress_support</label>
-        <label><input type="checkbox" value="goals" checked /> goals</label>
-        <label><input type="checkbox" value="loneliness" /> loneliness</label>
-        <label><input type="checkbox" value="curiosity" /> curiosity</label>
-        <label><input type="checkbox" value="self_growth" /> self_growth</label>
-      </div>
-      <button type="button" id="btn-onboarding">Save profile</button>
-    </section>
 
-    <section class="panel hidden" id="chat-panel">
-      <div class="chat-header">
-        <h2>Chat with ORBIT</h2>
-        <button type="button" class="secondary" id="btn-new-conv">New conversation</button>
+      <p class="hint" style="margin-top:1rem">Sign-in for next time (pick at least one):</p>
+      <label>Device ID *</label>
+      <input type="text" id="device_id" placeholder="e.g. my-phone-001" />
+      <div class="row">
+        <div>
+          <label>Email (optional)</label>
+          <input type="email" id="email" />
+        </div>
+        <div>
+          <label>Phone (optional)</label>
+          <input type="text" id="phone" />
+        </div>
       </div>
-      <div id="messages"></div>
-      <div class="chat-input">
-        <input type="text" id="message-input" placeholder="Type a message…" autocomplete="off" />
-        <button type="button" id="btn-send">Send</button>
+
+      <label>Why are you here? *</label>
+      <div class="checks" id="why-here-checks">
+        <label><input type="checkbox" value="companionship" checked /> Companionship</label>
+        <label><input type="checkbox" value="goals" checked /> Goals</label>
+        <label><input type="checkbox" value="stress_support" /> Support</label>
+        <label><input type="checkbox" value="loneliness" /> Connection</label>
+        <label><input type="checkbox" value="curiosity" /> Curiosity</label>
+        <label><input type="checkbox" value="self_growth" /> Growth</label>
       </div>
-      <p class="meta" id="conv-meta"></p>
-    </section>
+
+      <button type="button" id="btn-onboarding">Continue to chat</button>
+      <button type="button" class="link-btn" id="btn-back-auth">← Back to sign in</button>
+    </div>
+  </main>
+
+  <!-- CHAT -->
+  <main id="chat-screen" class="screen">
+    <div class="chat-top">
+      <h2>ORBIT</h2>
+    </div>
+    <div id="messages"><p class="empty-chat">Loading…</p></div>
+    <div class="chat-bottom">
+      <input type="text" id="message-input" placeholder="Message ORBIT…" autocomplete="off" />
+      <button type="button" id="btn-send">Send</button>
+    </div>
   </main>
 
   <div id="toast"></div>
 
   <script>
-    const STORAGE_USER = 'orbit_user_id';
-    const STORAGE_CONV = 'orbit_conversation_id';
+    const K = {
+      user: 'orbit_user_id',
+      token: 'orbit_access_token',
+      conv: 'orbit_conversation_id',
+      api: 'orbit_api_base',
+    };
+    const store = sessionStorage;
 
     const $ = (id) => document.getElementById(id);
+    const isFeDev = window.location.port === '3000';
+
+    function defaultApiBase() {
+      const q = new URLSearchParams(location.search).get('api');
+      if (q) return q.replace(/\/$/, '');
+      if (isFeDev) return 'http://localhost:8081';
+      return location.origin;
+    }
 
     function base() {
-      const v = $('api-base').value.trim().replace(/\/$/, '');
-      return v || window.location.origin;
+      const v = ($('api-base').value || '').trim().replace(/\/$/, '');
+      return v || defaultApiBase();
     }
 
-    function toast(msg, isError = false) {
+    function getToken() { return store.getItem(K.token); }
+    function setToken(t) { t ? store.setItem(K.token, t) : store.removeItem(K.token); }
+    function getUserId() { return store.getItem(K.user); }
+    function setUserId(id) { id ? store.setItem(K.user, id) : store.removeItem(K.user); }
+    function getConvId() { return store.getItem(K.conv); }
+    function setConvId(id) { id ? store.setItem(K.conv, id) : store.removeItem(K.conv); }
+
+    function toast(msg, err = false) {
       const el = $('toast');
       el.textContent = msg;
-      el.className = 'show' + (isError ? ' error' : '');
+      el.className = 'show' + (err ? ' error' : '');
       clearTimeout(el._t);
-      el._t = setTimeout(() => { el.className = ''; }, 4000);
+      el._t = setTimeout(() => { el.className = ''; }, 3500);
     }
 
-    async function api(method, path, body) {
+    async function api(method, path, body, { auth = true } = {}) {
       const opts = { method, headers: {} };
       if (body !== undefined) {
         opts.headers['Content-Type'] = 'application/json';
         opts.body = JSON.stringify(body);
       }
+      if (auth && getToken()) opts.headers['Authorization'] = 'Bearer ' + getToken();
       const res = await fetch(base() + path, opts);
       const text = await res.text();
       let data;
-      try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
       if (!res.ok) {
-        const err = new Error(data.error || res.statusText || 'Request failed');
-        err.status = res.status;
-        err.data = data;
-        throw err;
+        const e = new Error(data.error || res.statusText || 'Request failed');
+        e.status = res.status;
+        throw e;
       }
       return data;
     }
 
-    function getUserId() { return localStorage.getItem(STORAGE_USER); }
-    function setUserId(id) {
-      localStorage.setItem(STORAGE_USER, id);
-      $('user-meta').textContent = 'User: ' + id;
-    }
-    function getConvId() { return localStorage.getItem(STORAGE_CONV); }
-    function setConvId(id) {
-      localStorage.setItem(STORAGE_CONV, id);
-      $('conv-meta').textContent = id ? 'Conversation: ' + id : '';
-    }
-
-    function showOnboarding() {
-      $('onboarding-panel').classList.remove('hidden');
-      $('chat-panel').classList.add('hidden');
-    }
-    function showChat() {
-      $('onboarding-panel').classList.add('hidden');
-      $('chat-panel').classList.remove('hidden');
-    }
-
-    function renderMessages(list) {
-      const box = $('messages');
-      box.innerHTML = '';
-      (list || []).forEach((m) => {
-        const div = document.createElement('div');
-        div.className = 'msg ' + m.role;
-        div.innerHTML = '<div class="role">' + m.role + '</div>' + escapeHtml(m.content);
-        box.appendChild(div);
+    function showScreen(name) {
+      ['auth-screen', 'onboarding-screen', 'chat-screen'].forEach((id) => {
+        $(id).classList.toggle('active', id === name + '-screen');
       });
-      box.scrollTop = box.scrollHeight;
+      $('btn-logout').classList.toggle('hidden', name === 'auth');
+      $('user-badge').classList.toggle('hidden', name === 'auth');
+    }
+
+    async function loadChat() {
+      showScreen('chat');
+      $('messages').innerHTML = '<p class="empty-chat">Loading…</p>';
+      const data = await api('POST', '/v1/conversations', {});
+      const convId = data.conversation.id;
+      setConvId(convId);
+      const msgData = await api('GET', '/v1/conversations/' + convId + '/messages');
+      renderMessages(msgData.messages);
+    }
+
+    function setUserBadge(user) {
+      const name = user.nickname || user.name || 'You';
+      $('user-badge').textContent = name;
+    }
+
+    function logout() {
+      setUserId(null);
+      setToken(null);
+      setConvId(null);
+      showScreen('auth');
+      $('login-email').value = '';
+      $('login-phone').value = '';
     }
 
     function escapeHtml(s) {
@@ -367,65 +443,122 @@
       return d.innerHTML;
     }
 
+    function renderMessages(list) {
+      const box = $('messages');
+      if (!list || !list.length) {
+        box.innerHTML = '<p class="empty-chat">Say hello to ORBIT.</p>';
+        return;
+      }
+      box.innerHTML = '';
+      list.forEach((m) => {
+        const div = document.createElement('div');
+        div.className = 'msg ' + m.role;
+        const who = m.role === 'user' ? 'You' : 'ORBIT';
+        div.innerHTML = '<div class="who">' + who + '</div>' + escapeHtml(m.content);
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
     function getWhyHere() {
       return [...document.querySelectorAll('#why-here-checks input:checked')].map((c) => c.value);
     }
 
+    function loginBody() {
+      const email = $('login-email').value.trim().toLowerCase();
+      const phone = $('login-phone').value.trim();
+      const deviceId = $('login-device-id').value.trim();
+      const parts = [email, phone, deviceId].filter(Boolean);
+      if (parts.length !== 1) return null;
+      if (email) return { email };
+      if (phone) return { phone };
+      return { device_id: deviceId };
+    }
+
     async function checkHealth() {
       try {
-        await api('GET', '/health');
-        $('pill-api').textContent = 'API ok';
+        await api('GET', '/health', undefined, { auth: false });
+        $('pill-api').textContent = 'API';
         $('pill-api').className = 'pill ok';
       } catch {
-        $('pill-api').textContent = 'API down';
+        $('pill-api').textContent = 'API';
         $('pill-api').className = 'pill bad';
       }
       try {
-        await api('GET', '/ready');
-        $('pill-db').textContent = 'DB ok';
+        await api('GET', '/ready', undefined, { auth: false });
+        $('pill-db').textContent = 'DB';
         $('pill-db').className = 'pill ok';
       } catch {
-        $('pill-db').textContent = 'DB down';
+        $('pill-db').textContent = 'DB';
         $('pill-db').className = 'pill bad';
       }
     }
 
-    async function loadUser() {
-      const id = getUserId();
-      if (!id) {
-        showOnboarding();
-        $('onboarding-panel').classList.add('hidden');
-        return;
-      }
-      try {
-        const user = await api('GET', '/v1/users/' + id);
-        if (user.onboarding_completed) {
-          showChat();
-          await ensureConversation();
-        } else {
-          showOnboarding();
-        }
-      } catch (e) {
-        if (e.status === 404) {
-          localStorage.removeItem(STORAGE_USER);
-          localStorage.removeItem(STORAGE_CONV);
-          $('user-meta').textContent = 'No user yet';
-        }
-        toast(e.message, true);
+    async function afterAuth(data) {
+      setUserId(data.id);
+      setToken(data.access_token);
+      setUserBadge(data);
+      if (data.onboarding_completed) {
+        await loadChat();
+      } else {
+        showScreen('onboarding');
       }
     }
 
-    async function createUser() {
-      const user = await api('POST', '/v1/users');
-      setUserId(user.id);
-      localStorage.removeItem(STORAGE_CONV);
-      toast('User created');
-      showOnboarding();
+    async function tryRestoreSession() {
+      const id = getUserId();
+      const token = getToken();
+      if (!id || !token) return false;
+      try {
+        const user = await api('GET', '/v1/users/' + id);
+        setUserBadge(user);
+        if (user.onboarding_completed) {
+          await loadChat();
+        } else {
+          showScreen('onboarding');
+        }
+        return true;
+      } catch {
+        logout();
+        return false;
+      }
+    }
+
+    async function signIn() {
+      const body = loginBody();
+      if (!body) {
+        toast('Enter only one of: device ID, email, or phone', true);
+        return;
+      }
+      $('btn-login').disabled = true;
+      try {
+        const data = await api('POST', '/v1/auth/login', body, { auth: false });
+        await afterAuth(data);
+        toast('Welcome back');
+      } finally {
+        $('btn-login').disabled = false;
+      }
+    }
+
+    async function signUp() {
+      $('btn-signup').disabled = true;
+      try {
+        const data = await api('POST', '/v1/users', undefined, { auth: false });
+        setUserId(data.id);
+        setToken(data.access_token);
+        setConvId(null);
+        const dev = $('login-device-id').value.trim();
+        if (dev) $('device_id').value = dev;
+        showScreen('onboarding');
+        toast('Account created — finish your profile');
+      } finally {
+        $('btn-signup').disabled = false;
+      }
     }
 
     async function submitOnboarding() {
       const id = getUserId();
-      if (!id) { toast('Create a user first', true); return; }
+      if (!id) { showScreen('auth'); return; }
       const body = {
         name: $('name').value.trim(),
         nickname: $('nickname').value.trim(),
@@ -436,36 +569,28 @@
         timezone: $('timezone').value.trim(),
         communication_style: $('communication_style').value,
         why_here: getWhyHere(),
+        email: $('email').value.trim(),
+        phone: $('phone').value.trim(),
+        device_id: $('device_id').value.trim(),
       };
-      if (!body.birthdate) { toast('Birthdate is required', true); return; }
-      await api('PUT', '/v1/users/' + id + '/onboarding', body);
-      toast('Profile saved');
-      showChat();
-      await startConversation();
-    }
-
-    async function startConversation() {
-      const userId = getUserId();
-      const data = await api('POST', '/v1/conversations', { user_id: userId });
-      setConvId(data.conversation.id);
-      const msgs = data.greeting ? [data.greeting] : [];
-      renderMessages(msgs);
-      toast('Conversation started');
-    }
-
-    async function ensureConversation() {
-      const convId = getConvId();
-      if (convId) {
-        try {
-          const data = await api('GET', '/v1/conversations/' + convId + '/messages');
-          renderMessages(data.messages);
-          $('conv-meta').textContent = 'Conversation: ' + convId;
-          return;
-        } catch {
-          localStorage.removeItem(STORAGE_CONV);
-        }
+      if (!body.name || !body.birthdate) {
+        toast('Name and birthdate are required', true);
+        return;
       }
-      await startConversation();
+      if (!body.device_id && !body.email && !body.phone) {
+        toast('Add a device ID (or email/phone) to sign in later', true);
+        return;
+      }
+      $('btn-onboarding').disabled = true;
+      try {
+        const data = await api('PUT', '/v1/users/' + id + '/onboarding', body);
+        if (data.access_token) setToken(data.access_token);
+        setUserBadge(data);
+        await loadChat();
+        toast('You’re all set');
+      } finally {
+        $('btn-onboarding').disabled = false;
+      }
     }
 
     async function sendMessage() {
@@ -474,33 +599,48 @@
       if (!convId || !content) return;
       $('btn-send').disabled = true;
       try {
-        const data = await api('POST', '/v1/conversations/' + convId + '/messages', { content });
-        const data2 = await api('GET', '/v1/conversations/' + convId + '/messages');
-        renderMessages(data2.messages);
+        await api('POST', '/v1/conversations/' + convId + '/messages', { content });
+        const data = await api('GET', '/v1/conversations/' + convId + '/messages');
+        renderMessages(data.messages);
         $('message-input').value = '';
       } catch (e) {
+        if (e.status === 401) logout();
         toast(e.message, true);
       } finally {
         $('btn-send').disabled = false;
       }
     }
 
-    const feDev = window.location.port === '3000';
-    $('api-base').value = feDev ? 'http://localhost:8081' : window.location.origin;
+    // Tabs on auth screen
+    document.querySelectorAll('.tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+        document.querySelectorAll('.login-pane').forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        $('pane-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    $('btn-login').onclick = () => signIn().catch((e) => toast(e.message, true));
+    $('btn-signup').onclick = () => signUp().catch((e) => toast(e.message, true));
+    $('btn-onboarding').onclick = () => submitOnboarding().catch((e) => toast(e.message, true));
+    $('btn-back-auth').onclick = () => { logout(); showScreen('auth'); };
+    $('btn-logout').onclick = () => { logout(); toast('Signed out'); };
+    $('btn-send').onclick = sendMessage;
+    $('message-input').onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+    $('btn-settings').onclick = () => $('settings-panel').classList.toggle('open');
+    $('login-device-id').onkeydown = (e) => { if (e.key === 'Enter') signIn().catch(() => {}); };
+
+    const savedApi = localStorage.getItem(K.api);
+    $('api-base').value = (savedApi && savedApi.trim()) ? savedApi.trim() : defaultApiBase();
+    $('api-base').addEventListener('change', () => localStorage.setItem(K.api, $('api-base').value.trim()));
     $('birthdate').value = '1998-05-15';
 
-    $('btn-check').onclick = checkHealth;
-    $('btn-new-user').onclick = () => createUser().catch((e) => toast(e.message, true));
-    $('btn-onboarding').onclick = () => submitOnboarding().catch((e) => toast(e.message, true));
-    $('btn-new-conv').onclick = () => startConversation().catch((e) => toast(e.message, true));
-    $('btn-send').onclick = sendMessage;
-    $('message-input').onkeydown = (e) => { if (e.key === 'Enter') sendMessage(); };
-
-    const uid = getUserId();
-    if (uid) $('user-meta').textContent = 'User: ' + uid;
-
     checkHealth();
-    loadUser();
+    (async () => {
+      const restored = await tryRestoreSession();
+      if (!restored) showScreen('auth');
+    })();
   </script>
 </body>
 </html>

@@ -4,17 +4,37 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"orbit/pkg/auth"
 	"orbit/pkg/llm"
 	"orbit/pkg/store"
 )
 
 type Handler struct {
-	store *store.Store
-	llm   llm.Provider
+	store  *store.Store
+	llm    llm.Provider
+	tokens *auth.TokenService
 }
 
-func New(s *store.Store, provider llm.Provider) *Handler {
-	return &Handler{store: s, llm: provider}
+func New(s *store.Store, provider llm.Provider, tokens *auth.TokenService) *Handler {
+	return &Handler{store: s, llm: provider, tokens: tokens}
+}
+
+func (h *Handler) Store() *store.Store {
+	return h.store
+}
+
+func (h *Handler) issueToken(w http.ResponseWriter, userID string) (string, bool) {
+	id, err := parseUUID(userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "invalid user id")
+		return "", false
+	}
+	token, err := h.tokens.Issue(id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to issue token")
+		return "", false
+	}
+	return token, true
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

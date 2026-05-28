@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+
+	"orbit/pkg/models"
 )
 
 func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -10,5 +12,14 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "failed to create user")
 		return
 	}
-	writeJSON(w, http.StatusCreated, user)
+
+	token, ok := h.issueToken(w, user.ID)
+	if !ok {
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, models.CreateUserResponse{
+		User:        user,
+		AccessToken: token,
+	})
 }

@@ -8,6 +8,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"orbit/apps/api/handler"
+	"orbit/pkg/auth"
 	"orbit/pkg/config"
 	"orbit/pkg/db"
 	"orbit/pkg/llm"
@@ -41,9 +42,14 @@ func main() {
 		log.Print("LLM: stub mode (set GEMINI_API_KEY for real replies)")
 	}
 
+	tokens, err := auth.NewTokenService(cfg.JWTSecret, 0)
+	if err != nil {
+		log.Fatalf("auth: %v", err)
+	}
+
 	st := store.New(pool)
-	h := handler.New(st, provider)
-	srv := NewServer(pool, h)
+	h := handler.New(st, provider, tokens)
+	srv := NewServer(pool, h, tokens)
 	addr := fmt.Sprintf(":%s", cfg.Port)
 
 	log.Printf("ORBIT API listening on %s", addr)
