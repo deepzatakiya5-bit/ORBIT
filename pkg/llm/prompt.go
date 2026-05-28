@@ -28,6 +28,14 @@ func WithSystemForUser(user models.User, messages []Message) []Message {
 	return WithSystemPrompt(messages, SystemPromptForUser(user))
 }
 
+func WithSystemForUserAndMemory(user models.User, messages []Message, memoryContext string) []Message {
+	if strings.TrimSpace(memoryContext) == "" {
+		return WithSystemForUser(user, messages)
+	}
+	prompt := SystemPromptForUser(user) + "\n\n" + memoryContext
+	return WithSystemPrompt(messages, prompt)
+}
+
 func SystemPromptForUser(user models.User) string {
 	base := `You are ORBIT, a warm and thoughtful AI companion.
 Remember context from the conversation, respond naturally, and keep replies concise unless the user wants depth.

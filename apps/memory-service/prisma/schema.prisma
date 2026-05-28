@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MemoryType {
+  FACT
+  PREFERENCE
+  GOAL
+  RELATIONSHIP
+  EVENT
+  EMOTIONAL_PATTERN
+  IDENTITY
+  ROUTINE
+
+  @@map("memory_type_v2")
+}
+
+enum MemoryValidity {
+  ACTIVE
+  SUPERSEDED
+  INACTIVE
+  CONFLICTED
+
+  @@map("memory_validity")
+}
+
+enum SummaryPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum TimelineEventType {
+  TRAVEL
+  HOMETOWN_VISIT
+  CAREER_CHANGE
+  RELATIONSHIP_MILESTONE
+  ACHIEVEMENT
+  HEALTH
+  ROUTINE_CHANGE
+  CUSTOM
+
+  @@map("timeline_event_type")
+}
+
+model User {
+  id                  String         @id @db.Uuid
+  name                String?
+  nickname            String?
+  gender              String?
+  birthdate           DateTime?      @db.Date
+  occupation          String?
+  preferredLanguage   String?        @map("preferred_language")
+  timezone            String?
+  communicationStyle  String?        @map("communication_style")
+  whyHere             String[]       @default([]) @map("why_here")
+  onboardingCompletedAt DateTime?    @map("onboarding_completed_at")
+  email               String?
+  phone               String?
+  deviceId            String?        @map("device_id")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @default(now()) @map("updated_at")
+
+  conversations       Conversation[]
+  memories            Memory[]
+  timelineEvents      TimelineEvent[]
+  dailySummaries      DailySummary[]
+  weeklySummaries     WeeklySummary[]
+  monthlySummaries    MonthlySummary[]
+  yearlySummaries     YearlySummary[]
+  accessLogs          MemoryAccessLog[]
+
+  @@map("users")
+}
+
+model Conversation {
+  id          String    @id @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  title       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @map("updated_at")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  memories    Memory[]
+  events      TimelineEvent[]
+
+  @@index([userId], map: "idx_conversations_user_id")
+  @@map("conversations")
+}
+
+model Message {
+  id              String      @id @db.Uuid
+  conversationId  String      @map("conversation_id") @db.Uuid
+  role            String
+  content         String
+  createdAt       DateTime    @default(now()) @map("created_at")
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  memoryAccesses  MemoryAccessLog[]
+
+  @@index([conversationId], map: "idx_messages_conversation_id")
+  @@index([createdAt], map: "idx_messages_created_at")
+  @@map("messages")
+}
+
+model Memory {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String         @map("user_id") @db.Uuid
+  type                  MemoryType
+  content               String
+  confidence            Float          @default(0.5)
+  salience              Float          @default(0.5)
+  emotionalWeight       Float          @default(0.0) @map("emotional_weight")
+  recencyScore          Float          @default(0.5) @map("recency_score")
+  decayScore            Float          @default(1.0) @map("decay_score")
+  frequency             Int            @default(1)
+  explicitImportance    Float          @default(0.0) @map("explicit_importance")
+  goalRelevance         Float          @default(0.0) @map("goal_relevance")
+  userEmphasis          Float          @default(0.0) @map("user_emphasis")
+  validity              MemoryValidity @default(ACTIVE)
+  contradictionGroup    String?        @map("contradiction_group")
+  sourceConversationId  String?        @map("source_conversation_id") @db.Uuid
+  sourceMessageId       String?        @map("source_message_id") @db.Uuid
+  metadata              Json           @default("{}")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+  lastReferencedAt      DateTime?      @map("last_referenced_at")
+  validFrom             DateTime?      @map("valid_from")
+  validUntil            DateTime?      @map("valid_until")
+
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceConversation    Conversation?  @relation(fields: [sourceConversationId], references: [id], onDelete: SetNull)
+  embedding             MemoryEmbedding?
+  outgoingRelationships MemoryRelationship[] @relation("MemoryRelationshipSource")
+  incomingRelationships MemoryRelationship[] @relation("MemoryRelationshipTarget")
+  accessLogs            MemoryAccessLog[]
+
+  @@index([userId, type, validity])
+  @@index([userId, salience(sort: Desc)])
+  @@index([contradictionGroup])
+  @@map("memory")
+}
+
+model MemoryEmbedding {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memoryId    String   @unique @map("memory_id") @db.Uuid
+  provider    String   @default("gemini")
+  dimensions  Int      @default(1536)
+  embedding   Unsupported("vector(1536)")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  memory      Memory   @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@map("memory_embedding")
+}
+
+model TimelineEvent {
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                String           @map("user_id") @db.Uuid
+  conversationId        String?          @map("conversation_id") @db.Uuid
+  memoryId              String?          @map("memory_id") @db.Uuid
+  eventType             TimelineEventType @map("event_type")
+  title                 String
+  description           String?
+  startDate             DateTime         @map("start_date")
+  endDate               DateTime?        @map("end_date")
+  entities              Json             @default("[]")
+  location              String?
+  inferred              Boolean          @default(false)
+  confidence            Float            @default(0.5)
+  metadata              Json             @default("{}")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation          Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startDate(sort: Desc)])
+  @@index([eventType, startDate(sort: Desc)])
+  @@map("timeline_event")
+}
+
+model DailySummary {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  dayDate     DateTime   @map("day_date") @db.Date
+  summary     String
+  highlights  Json       @default("[]")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayDate])
+  @@map("daily_summary")
+}
+
+model WeeklySummary {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  weekStart   DateTime   @map("week_start") @db.Date
+  weekEnd     DateTime   @map("week_end") @db.Date
+  summary     String
+  highlights  Json       @default("[]")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@map("weekly_summary")
+}
+
+model MonthlySummary {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  monthDate   DateTime   @map("month_date") @db.Date
+  summary     String
+  highlights  Json       @default("[]")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthDate])
+  @@map("monthly_summary")
+}
+
+model YearlySummary {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  yearDate    DateTime   @map("year_date") @db.Date
+  summary     String
+  highlights  Json       @default("[]")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, yearDate])
+  @@map("yearly_summary")
+}
+
+model MemoryRelationship {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sourceMemoryId  String   @map("source_memory_id") @db.Uuid
+  targetMemoryId  String   @map("target_memory_id") @db.Uuid
+  relationType    String   @map("relation_type")
+  confidence      Float    @default(0.5)
+  createdAt       DateTime @default(now()) @map("created_at")
+  sourceMemory    Memory   @relation("MemoryRelationshipSource", fields: [sourceMemoryId], references: [id], onDelete: Cascade)
+  targetMemory    Memory   @relation("MemoryRelationshipTarget", fields: [targetMemoryId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceMemoryId, targetMemoryId, relationType])
+  @@index([targetMemoryId])
+  @@map("memory_relationship")
+}
+
+model MemoryAccessLog {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  memoryId        String   @map("memory_id") @db.Uuid
+  messageId       String?  @map("message_id") @db.Uuid
+  queryText       String?  @map("query_text")
+  retrievalScore  Float?   @map("retrieval_score")
+  usedInPrompt    Boolean  @default(false) @map("used_in_prompt")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memory          Memory   @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  message         Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([memoryId, createdAt(sort: Desc)])
+  @@map("memory_access_log")
+}
