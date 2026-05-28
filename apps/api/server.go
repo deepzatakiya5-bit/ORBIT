@@ -9,15 +9,17 @@ import (
 
 	"orbit/apps/api/handler"
 	"orbit/apps/api/middleware"
+	"orbit/pkg/auth"
 )
 
 type Server struct {
 	db      *pgxpool.Pool
 	handler *handler.Handler
+	tokens  *auth.TokenService
 }
 
-func NewServer(db *pgxpool.Pool, h *handler.Handler) *Server {
-	return &Server{db: db, handler: h}
+func NewServer(db *pgxpool.Pool, h *handler.Handler, tokens *auth.TokenService) *Server {
+	return &Server{db: db, handler: h, tokens: tokens}
 }
 
 func (s *Server) Routes() http.Handler {
@@ -34,14 +36,26 @@ func (s *Server) Routes() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Post("/users", s.handler.CreateUser)
-		r.Route("/users/{userID}", func(r chi.Router) {
-			r.Get("/", s.handler.GetUser)
-			r.Put("/onboarding", s.handler.CompleteOnboarding)
-		})
-		r.Post("/conversations", s.handler.CreateConversation)
-		r.Route("/conversations/{conversationID}", func(r chi.Router) {
-			r.Get("/messages", s.handler.ListMessages)
-			r.Post("/messages", s.handler.SendMessage)
+		r.Post("/auth/login", s.handler.Login)
+		r.Post("/auth/refresh", s.handler.RefreshToken)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.RequireAuth(s.tokens))
+
+			r.Route("/users/{userID}", func(r chi.Router) {
+				r.Use(middleware.RequirePathUser)
+				r.Get("/", s.handler.GetUser)
+				r.Put("/onboarding", s.handler.CompleteOnboarding)
+			})
+
+			r.Get("/conversations", s.handler.GetConversation)
+			r.Post("/conversations", s.handler.CreateConversation)
+
+			r.Route("/conversations/{conversationID}", func(r chi.Router) {
+				r.Use(middleware.RequireConversationOwner(s.handler.Store()))
+				r.Get("/messages", s.handler.ListMessages)
+				r.Post("/messages", s.handler.SendMessage)
+			})
 		})
 	})
 

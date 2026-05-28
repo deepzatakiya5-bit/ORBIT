@@ -17,7 +17,11 @@ func (s *Store) CreateMessage(ctx context.Context, conversationID uuid.UUID, rol
 	`, conversationID, role, content).Scan(
 		&msg.ID, &msg.ConversationID, &msg.Role, &msg.Content, &msg.CreatedAt,
 	)
-	return msg, err
+	if err != nil {
+		return msg, err
+	}
+	_ = s.TouchConversation(ctx, conversationID)
+	return msg, nil
 }
 
 func (s *Store) ListMessages(ctx context.Context, conversationID uuid.UUID, limit int) ([]models.Message, error) {

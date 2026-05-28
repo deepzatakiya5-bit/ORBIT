@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"orbit/pkg/llm"
 	"orbit/pkg/models"
@@ -12,21 +12,44 @@ import (
 )
 
 type createConversationRequest struct {
-	UserID string  `json:"user_id"`
-	Title  *string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 }
 
-func (h *Handler) CreateConversation(w http.ResponseWriter, r *http.Request) {
-	var req createConversationRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid JSON body")
+// GetConversation returns the authenticated user's single conversation thread.
+func (h *Handler) GetConversation(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(r)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	userID, err := uuid.Parse(req.UserID)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid user_id")
+	conv, err := h.store.GetConversationByUser(r.Context(), userID)
+	if errors.Is(err, store.ErrNotFound) {
+		writeJSON(w, http.StatusOK, map[string]any{"conversation": nil})
 		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load conversation")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"conversation": conv})
+}
+
+// CreateConversation returns the user's existing conversation or creates one with a greeting.
+func (h *Handler) CreateConversation(w http.ResponseWriter, r *http.Request) {
+	userID, ok := authUserID(r)
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	var req createConversationRequest
+	if r.ContentLength > 0 {
+		if err := decodeJSON(r, &req); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid JSON body")
+			return
+		}
 	}
 
 	user, err := h.store.GetUser(r.Context(), userID)
@@ -43,13 +66,35 @@ func (h *Handler) CreateConversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	existing, err := h.store.GetConversationByUser(r.Context(), userID)
+	if err == nil {
+		writeJSON(w, http.StatusOK, models.CreateConversationResponse{
+			Conversation: existing,
+		})
+		return
+	}
+	if !errors.Is(err, store.ErrNotFound) {
+		writeError(w, http.StatusInternalServerError, "failed to load conversation")
+		return
+	}
+
 	conv, err := h.store.CreateConversation(r.Context(), userID, req.Title)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			existing, getErr := h.store.GetConversationByUser(r.Context(), userID)
+			if getErr != nil {
+				writeError(w, http.StatusInternalServerError, "failed to load conversation")
+				return
+			}
+			writeJSON(w, http.StatusOK, models.CreateConversationResponse{Conversation: existing})
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "failed to create conversation")
 		return
 	}
 
-	convID, err := uuid.Parse(conv.ID)
+	convID, err := parseUUID(conv.ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "invalid conversation id")
 		return
@@ -84,15 +129,6 @@ func (h *Handler) ListMessages(w http.ResponseWriter, r *http.Request) {
 	convID, err := conversationIDFromRequest(r)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid conversation id")
-		return
-	}
-
-	if _, err := h.store.GetConversation(r.Context(), convID); err != nil {
-		if errors.Is(err, store.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "conversation not found")
-			return
-		}
-		writeError(w, http.StatusInternalServerError, "failed to load conversation")
 		return
 	}
 

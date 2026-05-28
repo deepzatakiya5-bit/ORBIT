@@ -13,6 +13,9 @@ type User struct {
 	Timezone            *string    `json:"timezone,omitempty"`
 	CommunicationStyle  *string    `json:"communication_style,omitempty"`
 	WhyHere             []string   `json:"why_here,omitempty"`
+	Email               *string    `json:"email,omitempty"`
+	Phone               *string    `json:"phone,omitempty"`
+	DeviceID            *string    `json:"device_id,omitempty"`
 	OnboardingCompleted bool       `json:"onboarding_completed"`
 	CreatedAt           time.Time  `json:"created_at"`
 	UpdatedAt           time.Time  `json:"updated_at"`
@@ -39,6 +42,9 @@ type OnboardingInput struct {
 	Timezone           string   `json:"timezone"`
 	CommunicationStyle string   `json:"communication_style"`
 	WhyHere            []string `json:"why_here"`
+	Email              string   `json:"email,omitempty"`
+	Phone              string   `json:"phone,omitempty"`
+	DeviceID           string   `json:"device_id,omitempty"`
 }
 
 type Conversation struct {
@@ -46,6 +52,14 @@ type Conversation struct {
 	UserID    string    `json:"user_id"`
 	Title     *string   `json:"title,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+}
+
+type ConversationSummary struct {
+	Conversation
+	MessageCount    int     `json:"message_count"`
+	LastMessage     *string `json:"last_message,omitempty"`
+	LastMessageRole *string `json:"last_message_role,omitempty"`
 }
 
 type CreateConversationResponse struct {

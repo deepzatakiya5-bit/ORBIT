@@ -99,14 +99,29 @@ func (h *Handler) CompleteOnboarding(w http.ResponseWriter, r *http.Request) {
 		PreferredLanguage:  strings.TrimSpace(input.PreferredLanguage),
 		Timezone:           strings.TrimSpace(input.Timezone),
 		CommunicationStyle: input.CommunicationStyle,
+		Email:              strings.TrimSpace(strings.ToLower(input.Email)),
+		Phone:              strings.TrimSpace(input.Phone),
+		DeviceID:           strings.TrimSpace(input.DeviceID),
 		WhyHere:            whyHere,
 	})
 	if err != nil {
+		if errors.Is(err, store.ErrDuplicateLoginID) {
+			writeError(w, http.StatusConflict, "email, phone, or device_id already in use")
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "failed to save profile")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, user)
+	token, ok := h.issueToken(w, user.ID)
+	if !ok {
+		return
+	}
+
+	writeJSON(w, http.StatusOK, models.CreateUserResponse{
+		User:        user,
+		AccessToken: token,
+	})
 }
 
 func validateOnboarding(in models.OnboardingInput) (time.Time, []string, error) {
@@ -121,6 +136,23 @@ func validateOnboarding(in models.OnboardingInput) (time.Time, []string, error) 
 	}
 	if strings.TrimSpace(in.PreferredLanguage) == "" {
 		return time.Time{}, nil, errValidation("preferred_language is required")
+	}
+
+	email := strings.TrimSpace(strings.ToLower(in.Email))
+	phone := strings.TrimSpace(in.Phone)
+	deviceID := strings.TrimSpace(in.DeviceID)
+	loginCount := 0
+	if email != "" {
+		loginCount++
+	}
+	if phone != "" {
+		loginCount++
+	}
+	if deviceID != "" {
+		loginCount++
+	}
+	if loginCount == 0 {
+		return time.Time{}, nil, errValidation("provide at least one of: email, phone, or device_id (needed to log in again later)")
 	}
 	if strings.TrimSpace(in.Timezone) == "" {
 		return time.Time{}, nil, errValidation("timezone is required (IANA name, e.g. Asia/Kolkata)")

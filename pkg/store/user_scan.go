@@ -9,6 +9,7 @@ import (
 func scanUser(
 	id string,
 	name, nickname, gender, occupation, preferredLanguage, timezone, communicationStyle *string,
+	email, phone, deviceID *string,
 	birthdate, onboardingCompletedAt *time.Time,
 	whyHere []string,
 	createdAt, updatedAt time.Time,
@@ -27,8 +28,18 @@ func scanUser(
 		Timezone:            timezone,
 		CommunicationStyle:  communicationStyle,
 		WhyHere:             whyHere,
+		Email:               email,
+		Phone:               phone,
+		DeviceID:            deviceID,
 		OnboardingCompleted: onboardingCompletedAt != nil,
 		CreatedAt:           createdAt,
 		UpdatedAt:           updatedAt,
 	}
+}
+
+func nullIfEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
