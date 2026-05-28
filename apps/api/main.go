@@ -12,6 +12,7 @@ import (
 	"orbit/pkg/config"
 	"orbit/pkg/db"
 	"orbit/pkg/llm"
+	"orbit/pkg/memory"
 	"orbit/pkg/store"
 )
 
@@ -34,12 +35,15 @@ func main() {
 	defer pool.Close()
 
 	var provider llm.Provider
-	if cfg.GeminiAPIKey != "" {
+	if cfg.LLMProvider == "ollama" {
+		provider = llm.NewOllama(cfg.OllamaURL, cfg.OllamaModel)
+		log.Printf("LLM: Ollama (%s @ %s)", cfg.OllamaModel, cfg.OllamaURL)
+	} else if cfg.GeminiAPIKey != "" {
 		provider = llm.NewGemini(cfg.GeminiAPIKey, cfg.GeminiModel)
 		log.Printf("LLM: Gemini (%s)", cfg.GeminiModel)
 	} else {
 		provider = llm.NewStub()
-		log.Print("LLM: stub mode (set GEMINI_API_KEY for real replies)")
+		log.Print("LLM: stub mode (set LLM_PROVIDER=ollama or GEMINI_API_KEY)")
 	}
 
 	tokens, err := auth.NewTokenService(cfg.JWTSecret, 0)
@@ -48,7 +52,8 @@ func main() {
 	}
 
 	st := store.New(pool)
-	h := handler.New(st, provider, tokens)
+	memoryClient := memory.New(cfg.MemoryURL, cfg.MemoryToken)
+	h := handler.New(st, provider, tokens, memoryClient)
 	srv := NewServer(pool, h, tokens)
 	addr := fmt.Sprintf(":%s", cfg.Port)
 

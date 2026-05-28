@@ -66,7 +66,14 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		llmMessages[i] = llm.Message{Role: m.Role, Content: m.Content}
 	}
 
-	reply, err := h.llm.Chat(r.Context(), llm.WithSystemForUser(user, llmMessages))
+	memoryContext := ""
+	if h.memory != nil && h.memory.Enabled() {
+		if ctx, memErr := h.memory.BuildContext(userID.String(), req.Content); memErr == nil {
+			memoryContext = ctx
+		}
+	}
+
+	reply, err := h.llm.Chat(r.Context(), llm.WithSystemForUserAndMemory(user, llmMessages, memoryContext))
 	if err != nil {
 		fmt.Println("failed to generate reply", err)
 		writeError(w, http.StatusBadGateway, "failed to generate reply")
@@ -83,6 +90,12 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		UserMessage:      userMsg,
 		AssistantMessage: assistantMsg,
 	})
+
+	if h.memory != nil && h.memory.Enabled() {
+		go func() {
+			_ = h.memory.EnqueueConversationUpdated(userID.String(), convID.String(), []string{userMsg.ID, assistantMsg.ID})
+		}()
+	}
 }
 
 func conversationIDFromRequest(r *http.Request) (uuid.UUID, error) {

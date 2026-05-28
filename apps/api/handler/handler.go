@@ -6,6 +6,7 @@ import (
 
 	"orbit/pkg/auth"
 	"orbit/pkg/llm"
+	"orbit/pkg/memory"
 	"orbit/pkg/store"
 )
 
@@ -13,10 +14,11 @@ type Handler struct {
 	store  *store.Store
 	llm    llm.Provider
 	tokens *auth.TokenService
+	memory *memory.Client
 }
 
-func New(s *store.Store, provider llm.Provider, tokens *auth.TokenService) *Handler {
-	return &Handler{store: s, llm: provider, tokens: tokens}
+func New(s *store.Store, provider llm.Provider, tokens *auth.TokenService, memoryClient *memory.Client) *Handler {
+	return &Handler{store: s, llm: provider, tokens: tokens, memory: memoryClient}
 }
 
 func (h *Handler) Store() *store.Store {

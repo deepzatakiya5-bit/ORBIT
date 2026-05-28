@@ -1,4 +1,4 @@
-.PHONY: up local-up down db wait-db be fe logs
+.PHONY: up local-up down db wait-db be fe logs mem mem-worker-extract mem-worker-summary mem-worker-decay mem-scheduler
 
 PORT ?= 8081
 FE_PORT ?= 3000
@@ -40,3 +40,18 @@ down:
 
 logs:
 	docker compose logs -f postgres
+
+mem:
+	cd apps/memory-service && npm run dev
+
+mem-worker-extract:
+	cd apps/memory-service && npm run worker:extract
+
+mem-worker-summary:
+	cd apps/memory-service && npm run worker:summary
+
+mem-worker-decay:
+	cd apps/memory-service && npm run worker:decay
+
+mem-scheduler:
+	cd apps/memory-service && npm run scheduler

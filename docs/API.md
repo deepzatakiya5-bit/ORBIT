@@ -763,7 +763,32 @@ curl -s http://localhost:8080/v1/conversations/$CONV_ID/messages
 
 | Environment | Behavior |
 |-------------|----------|
-| `GEMINI_API_KEY` set | Real replies via Gemini (`GEMINI_MODEL`, default `gemini-2.5-flash`) |
-| `GEMINI_API_KEY` unset | Dev stub — echoes input with a placeholder prefix |
+| `LLM_PROVIDER=ollama` | Local replies via Ollama (`OLLAMA_MODEL`, default `qwen2.5:7b-instruct`) |
+| `LLM_PROVIDER=gemini` + `GEMINI_API_KEY` set | Replies via Gemini |
+| Otherwise | Dev stub — echoes input with a placeholder prefix |
 
 Profile fields (name, nickname, timezone, communication style, why_here, etc.) are injected into the LLM system prompt for greetings and chat replies.
+
+---
+
+## Long-term memory service
+
+If `MEMORY_SERVICE_URL` is configured in the API:
+
+- each chat turn asynchronously triggers memory extraction
+- memory context is fetched before each assistant reply and injected into the prompt
+
+Memory service endpoints:
+
+- `GET /v1/users/{userId}/memory`
+- `GET /v1/users/{userId}/memory/search?query=...`
+- `GET /v1/users/{userId}/memory/context?query=...`
+- `GET /v1/users/{userId}/timeline`
+- `GET /v1/users/{userId}/timeline/insights`
+- `GET /v1/users/{userId}/summaries`
+- `POST /v1/users/{userId}/memory/{memoryId}/reinforce`
+- `POST /v1/users/{userId}/memory/{memoryId}/feedback`
+- `DELETE /v1/users/{userId}/memory/{memoryId}`
+- `GET /v1/users/{userId}/export`
+
+See `apps/memory-service/README.md` for architecture, workers, and deployment model.
